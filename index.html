@@ -45,7 +45,7 @@ input[type=text],select,textarea{font:inherit;color:var(--tx);background:var(--b
 #modal.on{display:flex}
 #mb{background:var(--card);border-radius:12px;max-width:820px;width:100%;max-height:90vh;overflow:auto;padding:16px}
 #mb pre{white-space:pre-wrap;font:inherit;margin:8px 0}
-#mb canvas{max-width:100%;height:auto;border:1px solid var(--bd)}
+#mb canvas{display:block;max-width:100%;height:auto;border:1px solid var(--bd)}
 </style></head>
 <body>
 <header><h1>⚽ BTEC Tech Award Sport – Question Bank</h1>
@@ -129,7 +129,7 @@ function classify(q){
   return sc.filter(x=>x.s>=sc[0].s*.7).slice(0,2).map(x=>x.id);
 }
 const norm=n=>n.toLowerCase().replace(/\.pdf$/,'').replace(/mark\s*scheme|marking|question\s*paper|\bms\b|\bqp\b|exam|[_\-\s.]+/g,'');
-const allQ=()=>S.files.filter(f=>f.kind==='exam').flatMap(f=>f.qs.map(q=>({...q,key:f.id+'-'+q.n,fid:f.id,paper:f.name.replace(/\.pdf$/i,'')})));
+const allQ=()=>S.files.filter(f=>f.kind==='exam').flatMap(f=>f.qs.map(q=>{const m=(f.ctxs||[]).filter(c=>q.n>=c.from&&q.n<=c.to);return{...q,key:f.id+'-'+q.n,fid:f.id,paper:f.name.replace(/\.pdf$/i,''),ctxs:m.length?m:(q.ctx?[q.ctx]:[])}}));
 const tname=id=>id==='none'?'Uncategorised':(S.topics.find(t=>t.id===id)||{name:'?'}).name;
 
 /* ---------- uploads ---------- */
@@ -168,12 +168,39 @@ function pasteT(){
 function mv(key,v){if(v){S.over[key]=[v];saveMeta();render()}}
 
 function exportBank(){
-  const bank={v:1,topics:S.topics,over:S.over,files:S.files.filter(f=>f.kind!=='spec').map(f=>({id:f.id,kind:f.kind,name:f.name,pages:f.pages,pair:f.pair,qs:f.qs}))};
+  const bank={v:1,topics:S.topics,over:S.over,files:S.files.filter(f=>f.kind!=='spec').map(f=>({id:f.id,kind:f.kind,name:f.name,pages:f.pages,pair:f.pair,qs:f.qs,ctxs:f.ctxs||[]}))};
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(bank)],{type:'application/json'}));a.download='bank.json';a.click();
 }
 /* ---------- modal ---------- */
 const closeM=()=>$('modal').classList.remove('on');
 const showM=h=>{$('mb').innerHTML=h+'<div class="acts"><button class="g" onclick="closeM()">Close</button></div>';$('modal').classList.add('on')};
+let CAP={};
+function delCtx(fid,cid){const f=S.files.find(x=>x.id===fid);f.ctxs=f.ctxs.filter(c=>c.id!==cid);saveFile(f);render()}
+function capInit(){
+  const w=$('capw'),s=$('sel');let a=null;
+  const pt=e=>{const r=$('cv').getBoundingClientRect();return{x:Math.max(0,Math.min(r.width,e.clientX-r.left)),y:Math.max(0,Math.min(r.height,e.clientY-r.top))}};
+  w.onpointerdown=e=>{a=pt(e);w.setPointerCapture(e.pointerId);CAP.rect=null;s.style.display='none'};
+  w.onpointermove=e=>{if(!a)return;const b=pt(e),x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),ww=Math.abs(a.x-b.x),hh=Math.abs(a.y-b.y);Object.assign(s.style,{display:'block',left:x+'px',top:y+'px',width:ww+'px',height:hh+'px'});CAP.rect={x,y,w:ww,h:hh}};
+  w.onpointerup=()=>{a=null;if(CAP.rect&&(CAP.rect.w<8||CAP.rect.h<8)){CAP.rect=null;s.style.display='none'}};
+}
+async function capUI(fid,p){
+  const exams=S.files.filter(f=>f.kind==='exam');fid=fid||(exams[0]&&exams[0].id);if(!fid)return;
+  const f=S.files.find(x=>x.id===fid);p=Math.max(1,Math.min(f.pages,+p||1));CAP={fid,p,rect:null};
+  showM(`<h2>Add scenario / figure</h2><div class="acts"><select onchange="capUI(this.value,1)">${exams.map(e=>`<option value="${e.id}" ${e.id===fid?'selected':''}>${esc(e.name)}</option>`).join('')}</select><button class="g" onclick="capUI('${fid}',${p-1})">‹</button><span>Page ${p} of ${f.pages}</span><button class="g" onclick="capUI('${fid}',${p+1})">›</button></div><p class="mu">Drag a box round the scenario or figure (optional), then fill in the details and save. Use the arrows to change page.</p><div id="capw" style="position:relative;display:inline-block;max-width:100%;touch-action:none;cursor:crosshair"><canvas id="cv"></canvas><div id="sel" style="position:absolute;border:2px solid #e11;background:rgba(255,0,0,.12);display:none;pointer-events:none"></div></div><div class="tr"><input type="text" id="ct" placeholder="Title, e.g. Scenario or Figure 1"><input type="text" id="cf" placeholder="Applies to questions, e.g. 1-4"><span></span></div><textarea id="cx" rows="3" style="width:100%" placeholder="Scenario text (optional if you drew a box)"></textarea><div class="acts"><button class="b" onclick="capSave()">Save</button></div>`);
+  capInit();
+  try{const pdf=await pdfjsLib.getDocument({data:new Uint8Array(f.buf.slice(0))}).promise;const pg=await pdf.getPage(p);const vp=pg.getViewport({scale:1.5});const c=$('cv');c.width=vp.width;c.height=vp.height;await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise}catch(e){}
+}
+function capSave(){
+  const f=S.files.find(x=>x.id===CAP.fid);
+  const rg=($('cf').value||'').match(/(\d+)(?:\s*(?:-|–|to)\s*(\d+))?/);
+  if(!rg){alert('Enter which questions this applies to, e.g. 1-4 or 3');return}
+  const from=+rg[1],to=+(rg[2]||rg[1]);let img=null;const cv=$('cv');
+  if(CAP.rect){const k=cv.width/cv.getBoundingClientRect().width,r=CAP.rect,c=document.createElement('canvas');c.width=r.w*k;c.height=r.h*k;c.getContext('2d').drawImage(cv,r.x*k,r.y*k,r.w*k,r.h*k,0,0,c.width,c.height);img=c.toDataURL('image/jpeg',.85)}
+  const text=$('cx').value.trim();
+  if(!img&&!text){alert('Draw a box round the figure, or type the scenario text.');return}
+  (f.ctxs=f.ctxs||[]).push({id:'c'+Date.now(),title:$('ct').value.trim()||'Scenario / context',from,to,text,img,p:CAP.p});
+  saveFile(f);closeM();render();
+}
 function viewMS(key){
   const q=allQ().find(x=>x.key===key);const ms=S.files.find(f=>f.kind==='ms'&&f.pair===q.fid);
   if(!ms)return showM('<h2>No mark scheme linked</h2><p>Upload the matching mark scheme and link it to <b>'+esc(q.paper)+'</b> in Setup.</p>');
@@ -209,6 +236,9 @@ function setupV(){
   ${!S.files.length?'<p class="mu">Nothing uploaded yet.</p>':''}
   ${ex.map(f=>`<div class="row"><span>📝 ${esc(f.name)}</span><span class="mu">${f.qs.length} questions found</span>${f.qs.length?'':'<span class="wn">None detected – is this a scanned PDF?</span>'}<button class="g" onclick="delFile('${f.id}')">Remove</button></div>`).join('')}
   ${ms.map(f=>`<div class="row"><span>✅ ${esc(f.name)}</span><span class="mu">Mark scheme for</span><select onchange="pair('${f.id}',this.value)"><option value="">– choose paper –</option>${ex.map(e=>`<option value="${e.id}" ${f.pair===e.id?'selected':''}>${esc(e.name)}</option>`).join('')}</select><button class="g" onclick="delFile('${f.id}')">Remove</button></div>`).join('')}</div>
+  <div class="panel"><h2>Scenarios &amp; figures</h2><p class="mu">Add the scenario or figure for each group of questions and say which questions it covers (e.g. 1-4). It then appears with every one of those questions, and for students too once you export.</p>
+  ${ex.map(f=>(f.ctxs||[]).map(c=>`<div class="row"><span>${esc(f.name)} – ${esc(c.title)}</span><span class="mu">Q${c.from}${c.to!==c.from?'–'+c.to:''}</span>${c.img?`<img src="${c.img}" alt="" style="height:36px">`:''}<button class="g" onclick="delCtx('${f.id}','${c.id}')">Remove</button></div>`).join('')).join('')}
+  <div class="acts"><button class="b" onclick="capUI()" ${ex.length?'':'disabled'}>+ Add scenario / figure</button></div></div>
   <div class="panel"><h2>3. Topics &amp; keywords</h2>
   <p class="mu">Each question is matched to the topics whose keywords appear most often in its text. Edit keywords to improve accuracy, then check the Questions tab.</p>
   ${S.topics.map((t,i)=>`<div class="tr"><input type="text" value="${esc(t.name)}" onchange="setT(${i},'name',this.value)"><input type="text" value="${esc(t.kw.join(', '))}" placeholder="keywords, comma separated" onchange="setT(${i},'kw',this.value)"><button class="g" onclick="delT(${i})">✕</button></div>`).join('')}
@@ -230,10 +260,10 @@ function qV(){
    ${S.tsel.size?'<button class="g" onclick="S.tsel.clear();render()">Clear filter</button>':''}
   </aside><section><p class="mu">${shown.length} question${shown.length===1?'':'s'}${S.tsel.size?' in selected topics':''}</p>
   ${shown.map(q=>`<div class="q"><div class="qh"><b>${esc(q.paper)}</b><span class="mu">Question ${q.n}${q.marks?' · '+q.marks+' marks':''}</span>${q.tp.map(t=>`<span class="chip">${esc(tname(t))}</span>`).join('')}</div>
-   ${S.showCtx&&q.ctx?`<div class="cx"><div class="mu"><b>Scenario / context</b> – click to expand</div><div class="qt" onclick="this.classList.toggle('open')">${esc(q.ctx.text)}</div></div>`:''}
-   ${!q.ctx&&REF.test(q.text)?'<p class="wn">⚠ This question refers to a scenario or figure but none was detected – use “View original page”.</p>':''}
+   ${S.showCtx?q.ctxs.map(c=>`<div class="cx"><div class="mu"><b>${esc(c.title||'Scenario / context')}</b></div>${c.text?`<div class="qt" onclick="this.classList.toggle('open')">${esc(c.text)}</div>`:''}${c.img?`<img src="${c.img}" alt="${esc(c.title||'figure')}" style="max-width:100%;display:block;margin-top:6px;background:#fff">`:''}</div>`).join(''):''}
+   ${!q.ctxs.length&&REF.test(q.text)?'<p class="wn">⚠ This question refers to a scenario or figure but none was detected – use “View original page”.</p>':''}
    <div class="qt" onclick="this.classList.toggle('open')" title="Click to expand">${esc(q.text)}</div>
-   <div class="acts"><button class="b" onclick="viewMS('${q.key}')">View mark scheme</button><button class="g" onclick="viewPg('${q.fid}',${q.p})">View original page</button>${q.ctx?`<button class="g" onclick="viewPg('${q.fid}',${q.ctx.p})">View scenario page</button>`:''}
+   <div class="acts"><button class="b" onclick="viewMS('${q.key}')">View mark scheme</button><button class="g" onclick="viewPg('${q.fid}',${q.p})">View original page</button>${q.ctxs.length?`<button class="g" onclick="viewPg('${q.fid}',${q.ctxs[0].p})">View scenario page</button>`:''}
    <select class="mvs" onchange="mv('${q.key}',this.value)"><option value="">Move to topic…</option>${S.topics.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></div></div>`).join('')}
   </section></div>`;
 }
