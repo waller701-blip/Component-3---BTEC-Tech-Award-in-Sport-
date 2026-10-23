@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+<title>BTEC Sport Question Bank</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1b1f24;--mu:#5d6773;--bd:#d9dee3;--ac:#0b6e4f;--ac2:#e3f3ec;--wn:#a15c00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13161a;--card:#1c2126;--tx:#e8eaed;--mu:#9aa4af;--bd:#313a42;--ac:#4fc79b;--ac2:#1b3a2e;--wn:#e0a24a}}
+:root[data-theme="dark"]{--bg:#13161a;--card:#1c2126;--tx:#e8eaed;--mu:#9aa4af;--bd:#313a42;--ac:#4fc79b;--ac2:#1b3a2e;--wn:#e0a24a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--bd)}
+header h1{font-size:18px;margin:0;flex:1;min-width:200px}
+.tabs button{padding:7px 14px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);cursor:pointer;font:inherit}
+.tabs button:first-child{border-radius:8px 0 0 8px}.tabs button:last-child{border-radius:0 8px 8px 0}
+.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px}
+h2{font-size:16px;margin:0 0 8px}
+.mu{color:var(--mu);font-size:13px}.wn{color:var(--wn)}
+.up{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.up label{display:block;border:2px dashed var(--bd);border-radius:10px;padding:14px;text-align:center;cursor:pointer}
+.up label:hover{border-color:var(--ac);background:var(--ac2)}
+.up input{display:none}
+button.b{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:7px 14px;font:inherit;cursor:pointer}
+button.g{background:transparent;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:5px 10px;font:inherit;cursor:pointer}
+input[type=text],select,textarea{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 8px;max-width:100%}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--bd)}
+.row:first-of-type{border-top:0}
+.tr{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;margin:6px 0}
+@media(max-width:600px){.tr{grid-template-columns:1fr}}
+.lay{display:grid;grid-template-columns:240px 1fr;gap:16px}
+@media(max-width:760px){.lay{grid-template-columns:1fr}}
+.tp{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:8px 10px;margin-bottom:6px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit;cursor:pointer}
+.tp.on{background:var(--ac2);border-color:var(--ac)}
+.tp span:last-child{color:var(--mu)}
+.q{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.qh{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.chip{background:var(--ac2);color:var(--ac);border-radius:99px;padding:1px 10px;font-size:12px}
+.qt{white-space:pre-wrap;max-height:9.5em;overflow:hidden;cursor:pointer;position:relative}
+.qt.open{max-height:none}
+.cx{background:var(--ac2);border-radius:8px;padding:8px 10px;margin-bottom:8px}.cx .qt{max-height:6em}.student .mvs{display:none}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+#modal.on{display:flex}
+#mb{background:var(--card);border-radius:12px;max-width:820px;width:100%;max-height:90vh;overflow:auto;padding:16px}
+#mb pre{white-space:pre-wrap;font:inherit;margin:8px 0}
+#mb canvas{max-width:100%;height:auto;border:1px solid var(--bd)}
+</style></head>
+<body>
+<header><h1>⚽ BTEC Tech Award Sport – Question Bank</h1>
+<div class="tabs"><button id="tq" onclick="tab('q')">Questions</button><button id="ts" onclick="tab('s')">Setup</button></div></header>
+<main id="app"></main>
+<div id="modal" onclick="if(event.target===this)closeM()"><div id="mb"></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+const S={files:[],topics:[],over:{},tab:'s',tsel:new Set(),pf:'all',busy:'',note:'',showCtx:true};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}catch(e){}
+
+/* ---------- storage (IndexedDB, private to this browser) ---------- */
+const DB=new Promise(res=>{try{const r=indexedDB.open('btec-sport',1);r.onupgradeneeded=()=>{r.result.createObjectStore('f',{keyPath:'id'});r.result.createObjectStore('m',{keyPath:'k'})};r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}});
+async function st(store,mode,fn){const d=await DB;if(!d)return;return new Promise(r=>{try{const t=d.transaction(store,mode);const q=fn(t.objectStore(store));t.oncomplete=()=>r(q&&q.result);t.onerror=()=>r()}catch(e){r()}})}
+const saveMeta=()=>{st('m','readwrite',s=>s.put({k:'topics',v:S.topics}));st('m','readwrite',s=>s.put({k:'over',v:S.over}))};
+const saveFile=f=>st('f','readwrite',s=>s.put(f));
+async function load(){
+  if(location.hash!=='#teacher'){try{const r=await fetch('bank.json',{cache:'no-cache'});if(r.ok){const b=await r.json();S.student=true;document.body.classList.add('student');S.files=b.files;S.topics=b.topics;S.over=b.over||{};S.tab='q';render();return}}catch(e){}}
+  S.files=(await st('f','readonly',s=>s.getAll()))||[];
+  for(const f of S.files){if(f.v!==2&&f.buf){try{S.busy='Updating '+f.name+'…';render();const r=await extract(f.buf);f.qs=split(r.lines,f.kind==='exam');f.v=2;await saveFile(f)}catch(e){}}}S.busy='';
+  const t=await st('m','readonly',s=>s.get('topics'));const o=await st('m','readonly',s=>s.get('over'));
+  if(t)S.topics=t.v;if(o)S.over=o.v;
+  S.tab=S.files.some(f=>f.kind==='exam')?'q':'s';render();
+}
+
+/* ---------- PDF reading ---------- */
+async function extract(buf){
+  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;const lines=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    const tc=await (await pdf.getPage(p)).getTextContent();const rows=[];
+    tc.items.forEach(i=>{if(!i.str)return;let r=rows.find(r=>Math.abs(r.y-i.transform[5])<3);if(!r){r={y:i.transform[5],it:[]};rows.push(r)}r.it.push(i)});
+    rows.sort((a,b)=>b.y-a.y).forEach(r=>{r.it.sort((a,b)=>a.transform[4]-b.transform[4]);let t='',end=null;r.it.forEach(i=>{const fs=Math.abs(i.transform[0])||i.height||10;if(end!==null&&!/^\s/.test(i.str)&&!/\s$/.test(t)&&i.transform[4]-end>fs*.15)t+=' ';t+=i.str;end=i.transform[4]+i.width});t=t.replace(/\s+/g,' ').trim();if(t)lines.push({p,t})});
+  }
+  return{lines,pages:pdf.numPages};
+}
+const JUNK=/^(\*?P\d{4,}[A-Z\d]*\*?|Turn over|BLANK PAGE|Do not write in this area|\d{1,2}\/\d{1,2}|©.*)$/i;
+function marks(t){const m=t.join('\n').match(/Total for Question\s*\d+\s*=\s*(\d+)/i);if(m)return+m[1];let x=0;t.forEach(l=>{const k=l.match(/\((\d{1,2})\)\s*$/);if(k)x+=+k[1]});return x||null}
+const CTX=/^((Scenario|Case study|Context)\b|Read the (following )?(scenario|case study|information|text|passage))/i;
+const STRICT=/^(Scenario|Case study|Context)\b/i;
+const REF=/\b(scenario|figure \d|table \d|case study|information (above|given)|the (text|passage|source))\b/i;
+function split(lines,useCtx){
+  const qs=[];let cur=null,n=1,pend=null,ctx=null,ended=false;
+  const fin=()=>{if(pend){const t=pend.t.join('\n');if(pend.hard||t.length>180)ctx={text:t,p:pend.p};else if(/Section\s+[A-Z]\b/i.test(t))ctx=null;pend=null}};
+  for(const l of lines){
+    if(JUNK.test(l.t))continue;
+    const m=l.t.match(/^(?:Question\s+)?(\d{1,2})(?=[\s(.]|$)\s*\.?\s*(.*)$/i);
+    if(m&&+m[1]===n&&!/^marks?\b/i.test(m[2])){fin();cur={n,p:l.p,t:[l.t],ctx};qs.push(cur);n++;ended=false}
+    else if(useCtx&&!pend&&(STRICT.test(l.t)||((ended||!cur)&&CTX.test(l.t)))){pend={t:[l.t],p:l.p,hard:true}}
+    else if(pend)pend.t.push(l.t);
+    else if(useCtx&&ended){pend={t:[l.t],p:l.p}}
+    else if(cur&&/Total for Question/i.test(l.t)){cur.t.push(l.t);ended=true}
+    else if(cur)cur.t.push(l.t);
+  }
+  return qs.map(q=>({n:q.n,p:q.p,text:q.t.join('\n'),marks:marks(q.t),ctx:q.ctx}));
+}
+
+/* ---------- topics from specification ---------- */
+const STOP=new Set('learners should understand including their which these where would about other with from that this have been when into such also they what your each used using must able aims content'.split(' '));
+const words=t=>(t.toLowerCase().match(/[a-z]{5,}/g)||[]).filter(w=>!STOP.has(w));
+function kwFrom(text,name){
+  const c={};words(text).forEach(w=>c[w]=(c[w]||0)+1);
+  const top=Object.entries(c).filter(e=>e[1]>=2).sort((a,b)=>b[1]-a[1]).slice(0,12).map(e=>e[0]);
+  return[...new Set([...words(name),...top])];
+}
+function topicsFromSpec(lines){
+  const hs=[];
+  lines.forEach((l,i)=>{const m=l.t.match(/^(?:Learning aim\s+)?([A-F]\d?)[:.\s]+([A-Z][^.]{3,70})$/)||l.t.match(/^(Topic area \d+|Unit \d+)[:.\s]+(.{3,70})$/i);if(m)hs.push({i,name:(m[1]+' '+m[2]).trim()})});
+  const best={};
+  hs.forEach((h,k)=>{const end=k+1<hs.length?hs[k+1].i:Math.min(lines.length,h.i+80);const txt=lines.slice(h.i+1,end).map(l=>l.t).join(' ');if(!best[h.name]||txt.length>best[h.name].txt.length)best[h.name]={txt,name:h.name}});
+  return Object.values(best).map((b,i)=>({id:'t'+Date.now()+i,name:b.name,kw:kwFrom(b.txt,b.name)}));
+}
+
+/* ---------- categorising ---------- */
+function classify(q){
+  if(S.over[q.key])return S.over[q.key];
+  const t=q.text.toLowerCase();
+  const sc=S.topics.map(tp=>({id:tp.id,s:tp.kw.reduce((a,k)=>{k=k.trim().toLowerCase();if(!k)return a;return a+(t.split(k).length-1)*(k.includes(' ')?2:1)},0)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
+  if(!sc.length)return['none'];
+  return sc.filter(x=>x.s>=sc[0].s*.7).slice(0,2).map(x=>x.id);
+}
+const norm=n=>n.toLowerCase().replace(/\.pdf$/,'').replace(/mark\s*scheme|marking|question\s*paper|\bms\b|\bqp\b|exam|[_\-\s.]+/g,'');
+const allQ=()=>S.files.filter(f=>f.kind==='exam').flatMap(f=>f.qs.map(q=>({...q,key:f.id+'-'+q.n,fid:f.id,paper:f.name.replace(/\.pdf$/i,'')})));
+const tname=id=>id==='none'?'Uncategorised':(S.topics.find(t=>t.id===id)||{name:'?'}).name;
+
+/* ---------- uploads ---------- */
+async function up(kind,files){
+  for(const file of files){
+    S.busy='Reading '+file.name+'…';render();
+    try{
+      const buf=await file.arrayBuffer();const {lines,pages}=await extract(buf);
+      if(kind==='spec'){
+        const tp=topicsFromSpec(lines);
+        S.note=tp.length>1?'Found '+tp.length+' topics in the specification. Please check and tidy the keywords below.':'Couldn’t reliably detect headings in that PDF. Paste your topic list below instead.';
+        if(tp.length>1&&(!S.topics.length||confirm('Replace the current topic list with the one from this specification?'))){S.topics=tp;saveMeta()}
+      }else{
+        const id='f'+Date.now()+Math.random().toString(36).slice(2,6);
+        const f={id,kind,name:file.name,buf,pages,v:2,qs:split(lines,kind==='exam'),pair:''};
+        if(kind==='ms'){const m=S.files.find(x=>x.kind==='exam'&&norm(x.name)===norm(f.name));if(m)f.pair=m.id}
+        S.files.push(f);await saveFile(f);
+        if(kind==='exam')S.files.filter(x=>x.kind==='ms'&&!x.pair).forEach(x=>{if(norm(x.name)===norm(f.name)){x.pair=f.id;saveFile(x)}});
+      }
+    }catch(e){S.note='Couldn’t read '+file.name+': '+e.message}
+  }
+  S.busy='';render();
+}
+async function delFile(id){S.files=S.files.filter(f=>f.id!==id);await st('f','readwrite',s=>s.delete(id));render()}
+function pair(id,v){const f=S.files.find(f=>f.id===id);f.pair=v;saveFile(f)}
+
+/* ---------- topic editing ---------- */
+function setT(i,k,v){S.topics[i][k]=k==='kw'?v.split(',').map(s=>s.trim()).filter(Boolean):v;saveMeta()}
+function addT(){S.topics.push({id:'t'+Date.now(),name:'New topic',kw:[]});saveMeta();render()}
+function delT(i){S.topics.splice(i,1);saveMeta();render()}
+function pasteT(){
+  const v=$('paste').value.split('\n').map(s=>s.trim()).filter(Boolean);if(!v.length)return;
+  S.topics=v.map((l,i)=>{const [n,k]=l.split(':');return{id:'t'+Date.now()+i,name:n.trim(),kw:k?k.split(',').map(s=>s.trim()).filter(Boolean):words(n)}});
+  S.over={};saveMeta();render();
+}
+function mv(key,v){if(v){S.over[key]=[v];saveMeta();render()}}
+
+function exportBank(){
+  const bank={v:1,topics:S.topics,over:S.over,files:S.files.filter(f=>f.kind!=='spec').map(f=>({id:f.id,kind:f.kind,name:f.name,pages:f.pages,pair:f.pair,qs:f.qs}))};
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(bank)],{type:'application/json'}));a.download='bank.json';a.click();
+}
+/* ---------- modal ---------- */
+const closeM=()=>$('modal').classList.remove('on');
+const showM=h=>{$('mb').innerHTML=h+'<div class="acts"><button class="g" onclick="closeM()">Close</button></div>';$('modal').classList.add('on')};
+function viewMS(key){
+  const q=allQ().find(x=>x.key===key);const ms=S.files.find(f=>f.kind==='ms'&&f.pair===q.fid);
+  if(!ms)return showM('<h2>No mark scheme linked</h2><p>Upload the matching mark scheme and link it to <b>'+esc(q.paper)+'</b> in Setup.</p>');
+  const m=ms.qs.find(x=>x.n===q.n);
+  showM('<h2>Mark scheme – '+esc(q.paper)+' · Q'+q.n+'</h2>'+(m?'<pre>'+esc(m.text)+'</pre><div class="acts"><button class="b" onclick="viewPg(\''+ms.id+'\','+m.p+')">View original page</button></div>':'<p class="wn">Couldn’t find question '+q.n+' in that mark scheme. You can still browse its pages.</p><div class="acts"><button class="b" onclick="viewPg(\''+ms.id+'\',1)">View pages</button></div>'));
+}
+async function viewPg(fid,p){
+  const f=S.files.find(f=>f.id===fid);p=Math.max(1,Math.min(f.pages,p));
+  showM('<p class="mu">'+esc(f.name)+' – page '+p+' of '+f.pages+'</p><div class="acts"><button class="g" onclick="viewPg(\''+fid+'\','+(p-1)+')">‹ Prev</button><button class="g" onclick="viewPg(\''+fid+'\','+(p+1)+')">Next ›</button></div><canvas id="cv"></canvas>');
+  let pg;try{const pdf=await pdfjsLib.getDocument(S.student?{url:'papers/'+encodeURIComponent(f.name)}:{data:new Uint8Array(f.buf.slice(0))}).promise;pg=await pdf.getPage(p)}catch(e){$('cv').outerHTML='<p class="wn">Couldn’t load the paper PDF. Ask your teacher to check it’s in the papers folder.</p>';return}
+  const vp=pg.getViewport({scale:1.5});const c=$('cv');c.width=vp.width;c.height=vp.height;
+  await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+}
+
+/* ---------- views ---------- */
+function tab(t){S.tab=t;render()}
+function tg(id){S.tsel.has(id)?S.tsel.delete(id):S.tsel.add(id);render()}
+function render(){document.querySelector('.tabs').style.display=S.student?'none':'';
+  $('tq').className=S.tab==='q'?'on':'';$('ts').className=S.tab==='s'?'on':'';
+  $('app').innerHTML=S.tab==='s'?setupV():qV();
+}
+function setupV(){
+  const ex=S.files.filter(f=>f.kind==='exam'),ms=S.files.filter(f=>f.kind==='ms');
+  return `<div class="panel"><h2>1. Upload your PDFs</h2>
+  <div class="up">
+   <label>📘 Specification / contents list<br><span class="mu">Used to build the topics</span><input type="file" accept=".pdf" onchange="up('spec',this.files)"></label>
+   <label>📝 Exam papers<br><span class="mu">One or more PDFs</span><input type="file" accept=".pdf" multiple onchange="up('exam',this.files)"></label>
+   <label>✅ Mark schemes<br><span class="mu">One or more PDFs</span><input type="file" accept=".pdf" multiple onchange="up('ms',this.files)"></label>
+  </div>
+  <p class="mu">${S.busy?'⏳ '+esc(S.busy):'Files stay in this browser on your device – nothing is sent anywhere.'}</p>
+  ${S.note?'<p class="wn">'+esc(S.note)+'</p>':''}</div>
+  <div class="panel"><h2>2. Your files</h2>
+  ${!S.files.length?'<p class="mu">Nothing uploaded yet.</p>':''}
+  ${ex.map(f=>`<div class="row"><span>📝 ${esc(f.name)}</span><span class="mu">${f.qs.length} questions found</span>${f.qs.length?'':'<span class="wn">None detected – is this a scanned PDF?</span>'}<button class="g" onclick="delFile('${f.id}')">Remove</button></div>`).join('')}
+  ${ms.map(f=>`<div class="row"><span>✅ ${esc(f.name)}</span><span class="mu">Mark scheme for</span><select onchange="pair('${f.id}',this.value)"><option value="">– choose paper –</option>${ex.map(e=>`<option value="${e.id}" ${f.pair===e.id?'selected':''}>${esc(e.name)}</option>`).join('')}</select><button class="g" onclick="delFile('${f.id}')">Remove</button></div>`).join('')}</div>
+  <div class="panel"><h2>3. Topics &amp; keywords</h2>
+  <p class="mu">Each question is matched to the topics whose keywords appear most often in its text. Edit keywords to improve accuracy, then check the Questions tab.</p>
+  ${S.topics.map((t,i)=>`<div class="tr"><input type="text" value="${esc(t.name)}" onchange="setT(${i},'name',this.value)"><input type="text" value="${esc(t.kw.join(', '))}" placeholder="keywords, comma separated" onchange="setT(${i},'kw',this.value)"><button class="g" onclick="delT(${i})">✕</button></div>`).join('')}
+  <div class="acts"><button class="g" onclick="addT()">+ Add topic</button><button class="b" onclick="tab('q')">See questions →</button></div>
+  <details style="margin-top:12px"><summary>Or paste a topic list</summary><p class="mu">One per line, optionally “Topic name: keyword, keyword”.</p><textarea id="paste" rows="5" style="width:100%"></textarea><div class="acts"><button class="g" onclick="pasteT()">Replace topics</button></div></details></div>
+  <div class="panel"><h2>4. Publish for students</h2><p class="mu">Once you’re happy with the topics and questions, export them as a file called <b>bank.json</b>. Upload that to your GitHub site (and the original PDFs into a folder called <b>papers</b>) and students will see a read-only version of this page. Export only works when you open your site with <b>#teacher</b> on the end of the web address.</p><div class="acts"><button class="b" onclick="exportBank()">Export bank.json</button></div></div>`;
+}
+function qV(){
+  const qs=allQ();
+  if(!qs.length)return '<div class="panel"><p>No questions yet. Go to <b>Setup</b> and upload an exam paper.</p></div>';
+  const cl=qs.map(q=>({...q,tp:classify(q)}));
+  const cnt={};cl.forEach(q=>q.tp.forEach(t=>cnt[t]=(cnt[t]||0)+1));
+  const ids=[...S.topics.map(t=>t.id),'none'].filter(id=>cnt[id]);
+  const papers=S.files.filter(f=>f.kind==='exam');
+  let shown=cl.filter(q=>(!S.tsel.size||q.tp.some(t=>S.tsel.has(t)))&&(S.pf==='all'||q.fid===S.pf));
+  return `<div class="lay"><aside><label class="mu" style="display:block;margin-bottom:10px"><input type="checkbox" ${S.showCtx?'checked':''} onchange="S.showCtx=this.checked;render()"> Show scenarios</label>
+   <select style="width:100%;margin-bottom:10px" onchange="S.pf=this.value;render()"><option value="all">All papers</option>${papers.map(p=>`<option value="${p.id}" ${S.pf===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+   ${ids.map(id=>`<button class="tp ${S.tsel.has(id)?'on':''}" onclick="tg('${id}')"><span>${esc(tname(id))}</span><span>${cnt[id]}</span></button>`).join('')}
+   ${S.tsel.size?'<button class="g" onclick="S.tsel.clear();render()">Clear filter</button>':''}
+  </aside><section><p class="mu">${shown.length} question${shown.length===1?'':'s'}${S.tsel.size?' in selected topics':''}</p>
+  ${shown.map(q=>`<div class="q"><div class="qh"><b>${esc(q.paper)}</b><span class="mu">Question ${q.n}${q.marks?' · '+q.marks+' marks':''}</span>${q.tp.map(t=>`<span class="chip">${esc(tname(t))}</span>`).join('')}</div>
+   ${S.showCtx&&q.ctx?`<div class="cx"><div class="mu"><b>Scenario / context</b> – click to expand</div><div class="qt" onclick="this.classList.toggle('open')">${esc(q.ctx.text)}</div></div>`:''}
+   ${!q.ctx&&REF.test(q.text)?'<p class="wn">⚠ This question refers to a scenario or figure but none was detected – use “View original page”.</p>':''}
+   <div class="qt" onclick="this.classList.toggle('open')" title="Click to expand">${esc(q.text)}</div>
+   <div class="acts"><button class="b" onclick="viewMS('${q.key}')">View mark scheme</button><button class="g" onclick="viewPg('${q.fid}',${q.p})">View original page</button>${q.ctx?`<button class="g" onclick="viewPg('${q.fid}',${q.ctx.p})">View scenario page</button>`:''}
+   <select class="mvs" onchange="mv('${q.key}',this.value)"><option value="">Move to topic…</option>${S.topics.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></div></div>`).join('')}
+  </section></div>`;
+}
+load();
+</script></body></html>
