@@ -67,7 +67,7 @@ const saveFile=f=>st('f','readwrite',s=>s.put(f));
 async function load(){
   if(location.hash!=='#teacher'){try{const r=await fetch('bank.json',{cache:'no-cache'});if(r.ok){const b=await r.json();S.student=true;document.body.classList.add('student');S.files=b.files;S.topics=b.topics;S.over=b.over||{};S.tab='q';render();return}}catch(e){}}
   S.files=(await st('f','readonly',s=>s.getAll()))||[];
-  for(const f of S.files){if(f.v!==2&&f.buf){try{S.busy='Updating '+f.name+'…';render();const r=await extract(f.buf);f.qs=split(r.lines,f.kind==='exam');f.v=2;await saveFile(f)}catch(e){}}}S.busy='';
+  for(const f of S.files){if(f.v!==3&&f.buf){try{S.busy='Updating '+f.name+'…';render();const r=await extract(f.buf);f.qs=split(r.lines,f.kind==='exam');f.v=3;await saveFile(f)}catch(e){}}}S.busy='';
   const t=await st('m','readonly',s=>s.get('topics'));const o=await st('m','readonly',s=>s.get('over'));
   if(t)S.topics=t.v;if(o)S.over=o.v;
   S.tab=S.files.some(f=>f.kind==='exam')?'q':'s';render();
@@ -78,17 +78,56 @@ async function extract(buf){
   const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;const lines=[];
   for(let p=1;p<=pdf.numPages;p++){
     const tc=await (await pdf.getPage(p)).getTextContent();const rows=[];
-    tc.items.forEach(i=>{if(!i.str)return;let r=rows.find(r=>Math.abs(r.y-i.transform[5])<3);if(!r){r={y:i.transform[5],it:[]};rows.push(r)}r.it.push(i)});
-    rows.sort((a,b)=>b.y-a.y).forEach(r=>{r.it.sort((a,b)=>a.transform[4]-b.transform[4]);let t='',end=null;r.it.forEach(i=>{const fs=Math.abs(i.transform[0])||i.height||10;if(end!==null&&!/^\s/.test(i.str)&&!/\s$/.test(t)&&i.transform[4]-end>fs*.15)t+=' ';t+=i.str;end=i.transform[4]+i.width});t=t.replace(/\s+/g,' ').trim();if(t)lines.push({p,t})});
+    tc.items.forEach(i=>{if(!i.str||Math.abs(i.transform[1])>Math.abs(i.transform[0]))return;let r=rows.find(r=>Math.abs(r.y-i.transform[5])<3);if(!r){r={y:i.transform[5],it:[]};rows.push(r)}r.it.push(i)});
+    rows.sort((a,b)=>b.y-a.y).forEach(r=>{r.it.sort((a,b)=>a.transform[4]-b.transform[4]);let t='',end=null;r.it.forEach(i=>{const fs=Math.abs(i.transform[0])||i.height||10;if(end!==null&&!/^\s/.test(i.str)&&!/\s$/.test(t)&&i.transform[4]-end>fs*.15)t+=' ';t+=i.str;end=i.transform[4]+i.width});t=t.replace(/\s+/g,' ').trim();if(t)lines.push({p,t,y:r.y,h:Math.abs(r.it[0].transform[0])||10})});
   }
   return{lines,pages:pdf.numPages};
 }
-const JUNK=/^(\*?P\d{4,}[A-Z\d]*\*?|Turn over|BLANK PAGE|Do not write in this area|\d{1,2}\/\d{1,2}|©.*)$/i;
+const JUNK=/^(\*?P\d{4,}[A-Z\d]*\*?|P\d{5}[A-Z]|Turn over|BLANK PAGE|(DO NOT WRITE IN THIS AREA\s*)+|[\d\/]{1,8}|Question( Number| Answer Mark ?Number)?|Number|Answer Mark( ?Number)?|©.*)$/i;
 function marks(t){const m=t.join('\n').match(/Total for Question\s*\d+\s*=\s*(\d+)/i);if(m)return+m[1];let x=0;t.forEach(l=>{const k=l.match(/\((\d{1,2})\)\s*$/);if(k)x+=+k[1]});return x||null}
 const CTX=/^((Scenario|Case study|Context)\b|Read the (following )?(scenario|case study|information|text|passage))/i;
 const STRICT=/^(Scenario|Case study|Context)\b/i;
 const REF=/\b(scenario|figure \d|table \d|case study|information (above|given)|the (text|passage|source))\b/i;
-function split(lines,useCtx){
+function split(lines,isExam){
+  const L='abcdefghijklmnop',nx=p=>p?L[L.indexOf(p)+1]:'a',CAPR=/^(Figure|Table)\s+\d+$/;
+  const out=[];let cq=0,cp='',cur=null,buf=[],ended=false;
+  const isA=(c,a)=>/\(\d{1,2}\)$/.test(a.t)||/^[A-D]\s/.test(a.t)||(CAPR.test(a.t)&&c.lines.some(b=>b!==a&&b.t.includes(a.t)));
+  for(const l of lines){
+    const t=l.t.replace(/[.\u2026]{4,}/g,'').trim();
+    if(!t||(t!==l.t.trim()&&/^\d{1,2}$/.test(t))||JUNK.test(t))continue;
+    if(/^(Answer all questions|Some questions must be answered|answer, put a line through)/i.test(t)){buf=[];continue}
+    const x={...l,t};let q=0,p='',nw=false,m;
+    if(m=t.match(/^(?:Question\s+)?(\d{1,2})\s*\(([a-z])[a-z]*\)/i)){q=+m[1];p=m[2].toLowerCase();nw=(q===cq&&p===nx(cp))||(q===cq+1&&p==='a')}
+    else if(m=t.match(/^(?:Question\s+)?(\d{1,2})\s+(?!marks?\b)\S/i)){q=+m[1];nw=q===cq+1}
+    else if(isExam&&cq&&(m=t.match(/^\(([a-z])\)\s/))){q=cq;p=m[1];nw=p===nx(cp)}
+    if(nw){
+      let lead=[];const nq=q!==cq;
+      if(nq)lead=buf;
+      else if(isExam&&cur){
+        let k=-1;cur.lines.forEach((a,i)=>{if(isA(cur,a))k=i});
+        if(k>=0){const tr=cur.lines.slice(k+1);
+          if(tr.some(a=>CAPR.test(a.t)&&t.includes(a.t)))lead=tr;
+          else{let j=tr.length;while(j>0&&(j===tr.length||tr[j-1].t.length>=30))j--;lead=tr.slice(j)}
+          cur.lines.length-=lead.length}
+      }
+      const intro=nq?lead.map(a=>a.t).join('\n'):cur.intro,f0=lead[0]||x;
+      cur={q,part:p,label:q+(p?'('+p+')':''),lines:[x],p:f0.p,y:f0.y,h:f0.h,intro,own:(!nq&&lead.length)?lead.map(a=>a.t).join('\n'):''};
+      out.push(cur);cq=q;cp=p;buf=[];ended=false;continue;
+    }
+    if(ended)buf.push(x);
+    else if(cur){cur.lines.push(x);if(isExam&&/Total for Question/i.test(t))ended=true}
+    else if(isExam)buf.push(x);
+  }
+  return out.map((c,i)=>{
+    const n=out[i+1],text=(c.own?c.own+'\n':'')+c.lines.map(a=>a.t).join('\n');
+    let la=c.lines[c.lines.length-1];c.lines.forEach(a=>{if(isA(c,a))la=a});
+    const fig=/\b(figure|table|picture|diagram|shown|image|chart|graph)\b/i.test(text);
+    let y2=la.y-la.h*.6;if(fig)y2=(n&&n.p===la.p)?n.y+n.h*1.2:null;
+    const mk=c.lines.filter(a=>/\(\d{1,2}\)$/.test(a.t)).reduce((s,a)=>s+ +a.t.match(/\((\d{1,2})\)$/)[1],0);
+    return{n:c.q,part:c.part,label:c.label,p:c.p,y:c.y+c.h,p2:la.p,y2,text,intro:c.intro,marks:mk||null};
+  });
+}
+function splitOld(lines,useCtx){
   const qs=[];let cur=null,n=1,pend=null,ctx=null,ended=false;
   const fin=()=>{if(pend){const t=pend.t.join('\n');if(pend.hard||t.length>180)ctx={text:t,p:pend.p};else if(/Section\s+[A-Z]\b/i.test(t))ctx=null;pend=null}};
   for(const l of lines){
@@ -123,13 +162,13 @@ function topicsFromSpec(lines){
 /* ---------- categorising ---------- */
 function classify(q){
   if(S.over[q.key])return S.over[q.key];
-  const t=q.text.toLowerCase();
+  const t=(q.text+' '+(q.ms||'')).toLowerCase();
   const sc=S.topics.map(tp=>({id:tp.id,s:tp.kw.reduce((a,k)=>{k=k.trim().toLowerCase();if(!k)return a;return a+(t.split(k).length-1)*(k.includes(' ')?2:1)},0)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
   if(!sc.length)return['none'];
   return sc.filter(x=>x.s>=sc[0].s*.7).slice(0,2).map(x=>x.id);
 }
 const norm=n=>n.toLowerCase().replace(/\.pdf$/,'').replace(/mark\s*scheme|marking|question\s*paper|\bms\b|\bqp\b|exam|[_\-\s.]+/g,'');
-const allQ=()=>S.files.filter(f=>f.kind==='exam').flatMap(f=>f.qs.map(q=>{const m=(f.ctxs||[]).filter(c=>q.n>=c.from&&q.n<=c.to);return{...q,key:f.id+'-'+q.n,fid:f.id,paper:f.name.replace(/\.pdf$/i,''),ctxs:m.length?m:(q.ctx?[q.ctx]:[])}}));
+const allQ=()=>S.files.filter(f=>f.kind==='exam').flatMap(f=>{const ms=S.files.find(x=>x.kind==='ms'&&x.pair===f.id);return f.qs.map(q=>{const m=(f.ctxs||[]).filter(c=>q.n>=c.from&&q.n<=c.to),k=ms&&ms.qs.find(x=>x.label===q.label);return{...q,key:f.id+'-'+(q.label||q.n),fid:f.id,paper:f.name.replace(/\.pdf$/i,''),ms:k?k.text:'',ctxs:m.length?m:(q.intro?[{title:'Scenario',text:q.intro,p:q.p}]:[])}})});
 const tname=id=>id==='none'?'Uncategorised':(S.topics.find(t=>t.id===id)||{name:'?'}).name;
 
 /* ---------- uploads ---------- */
@@ -144,7 +183,7 @@ async function up(kind,files){
         if(tp.length>1&&(!S.topics.length||confirm('Replace the current topic list with the one from this specification?'))){S.topics=tp;saveMeta()}
       }else{
         const id='f'+Date.now()+Math.random().toString(36).slice(2,6);
-        const f={id,kind,name:file.name,buf,pages,v:2,qs:split(lines,kind==='exam'),pair:''};
+        const f={id,kind,name:file.name,buf,pages,v:3,qs:split(lines,kind==='exam'),pair:''};
         if(kind==='ms'){const m=S.files.find(x=>x.kind==='exam'&&norm(x.name)===norm(f.name));if(m)f.pair=m.id}
         S.files.push(f);await saveFile(f);
         if(kind==='exam')S.files.filter(x=>x.kind==='ms'&&!x.pair).forEach(x=>{if(norm(x.name)===norm(f.name)){x.pair=f.id;saveFile(x)}});
@@ -174,6 +213,23 @@ function exportBank(){
 /* ---------- modal ---------- */
 const closeM=()=>$('modal').classList.remove('on');
 const showM=h=>{$('mb').innerHTML=h+'<div class="acts"><button class="g" onclick="closeM()">Close</button></div>';$('modal').classList.add('on')};
+async function viewPrint(key){
+  const q=allQ().find(x=>x.key===key),f=S.files.find(x=>x.id===q.fid);
+  showM('<p class="mu">'+esc(q.paper)+' – Question '+q.label+' as printed</p><div id="pw"><p class="mu">Loading…</p></div>');
+  try{
+    const pdf=await pdfjsLib.getDocument(S.student?{url:'papers/'+encodeURIComponent(f.name)}:{data:new Uint8Array(f.buf.slice(0))}).promise;
+    $('pw').innerHTML='';const last=q.p2||q.p;
+    for(let p=q.p;p<=last;p++){
+      const pg=await pdf.getPage(p),sc=1.6,vp=pg.getViewport({scale:sc}),H=pg.view[3];
+      const yT=p===q.p?q.y:H*.95,yB=(p===last&&q.y2!=null)?q.y2:H*.07;
+      const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
+      await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+      const top=Math.max(0,(H-yT-6)*sc),bot=Math.min(vp.height,(H-yB)*sc),x0=vp.width*.06,w=vp.width*.88,h=Math.max(10,bot-top);
+      const o=document.createElement('canvas');o.width=w;o.height=h;o.getContext('2d').drawImage(c,x0,top,w,h,0,0,w,h);
+      $('pw').appendChild(o);
+    }
+  }catch(e){$('pw').innerHTML='<p class="wn">Couldn’t load the paper PDF. Ask your teacher to check it’s in the papers folder.</p>'}
+}
 let CAP={};
 function delCtx(fid,cid){const f=S.files.find(x=>x.id===fid);f.ctxs=f.ctxs.filter(c=>c.id!==cid);saveFile(f);render()}
 function capInit(){
@@ -204,8 +260,8 @@ function capSave(){
 function viewMS(key){
   const q=allQ().find(x=>x.key===key);const ms=S.files.find(f=>f.kind==='ms'&&f.pair===q.fid);
   if(!ms)return showM('<h2>No mark scheme linked</h2><p>Upload the matching mark scheme and link it to <b>'+esc(q.paper)+'</b> in Setup.</p>');
-  const m=ms.qs.find(x=>x.n===q.n);
-  showM('<h2>Mark scheme – '+esc(q.paper)+' · Q'+q.n+'</h2>'+(m?'<pre>'+esc(m.text)+'</pre><div class="acts"><button class="b" onclick="viewPg(\''+ms.id+'\','+m.p+')">View original page</button></div>':'<p class="wn">Couldn’t find question '+q.n+' in that mark scheme. You can still browse its pages.</p><div class="acts"><button class="b" onclick="viewPg(\''+ms.id+'\',1)">View pages</button></div>'));
+  const m=ms.qs.find(x=>x.label===q.label);
+  showM('<h2>Mark scheme – '+esc(q.paper)+' · Q'+q.label+'</h2>'+(m?'<pre>'+esc(m.text)+'</pre><div class="acts"><button class="b" onclick="viewPg(\''+ms.id+'\','+m.p+')">View original page</button></div>':'<p class="wn">Couldn’t find question '+q.n+' in that mark scheme. You can still browse its pages.</p><div class="acts"><button class="b" onclick="viewPg(\''+ms.id+'\',1)">View pages</button></div>'));
 }
 async function viewPg(fid,p){
   const f=S.files.find(f=>f.id===fid);p=Math.max(1,Math.min(f.pages,p));
@@ -259,11 +315,11 @@ function qV(){
    ${ids.map(id=>`<button class="tp ${S.tsel.has(id)?'on':''}" onclick="tg('${id}')"><span>${esc(tname(id))}</span><span>${cnt[id]}</span></button>`).join('')}
    ${S.tsel.size?'<button class="g" onclick="S.tsel.clear();render()">Clear filter</button>':''}
   </aside><section><p class="mu">${shown.length} question${shown.length===1?'':'s'}${S.tsel.size?' in selected topics':''}</p>
-  ${shown.map(q=>`<div class="q"><div class="qh"><b>${esc(q.paper)}</b><span class="mu">Question ${q.n}${q.marks?' · '+q.marks+' marks':''}</span>${q.tp.map(t=>`<span class="chip">${esc(tname(t))}</span>`).join('')}</div>
+  ${shown.map(q=>`<div class="q"><div class="qh"><b>${esc(q.paper)}</b><span class="mu">Question ${q.label||q.n}${q.marks?' · '+q.marks+' marks':''}</span>${q.tp.map(t=>`<span class="chip">${esc(tname(t))}</span>`).join('')}</div>
    ${S.showCtx?q.ctxs.map(c=>`<div class="cx"><div class="mu"><b>${esc(c.title||'Scenario / context')}</b></div>${c.text?`<div class="qt" onclick="this.classList.toggle('open')">${esc(c.text)}</div>`:''}${c.img?`<img src="${c.img}" alt="${esc(c.title||'figure')}" style="max-width:100%;display:block;margin-top:6px;background:#fff">`:''}</div>`).join(''):''}
    ${!q.ctxs.length&&REF.test(q.text)?'<p class="wn">⚠ This question refers to a scenario or figure but none was detected – use “View original page”.</p>':''}
    <div class="qt" onclick="this.classList.toggle('open')" title="Click to expand">${esc(q.text)}</div>
-   <div class="acts"><button class="b" onclick="viewMS('${q.key}')">View mark scheme</button><button class="g" onclick="viewPg('${q.fid}',${q.p})">View original page</button>${q.ctxs.length?`<button class="g" onclick="viewPg('${q.fid}',${q.ctxs[0].p})">View scenario page</button>`:''}
+   <div class="acts"><button class="b" onclick="viewMS('${q.key}')">View mark scheme</button><button class="g" onclick="viewPrint('${q.key}')">View as printed</button><button class="g" onclick="viewPg('${q.fid}',${q.p})">View original page</button>${q.ctxs.length?`<button class="g" onclick="viewPg('${q.fid}',${q.ctxs[0].p})">View scenario page</button>`:''}
    <select class="mvs" onchange="mv('${q.key}',this.value)"><option value="">Move to topic…</option>${S.topics.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></div></div>`).join('')}
   </section></div>`;
 }
