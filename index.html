@@ -54,7 +54,17 @@ button.hc{background:#3d4a5c;color:#fff;border:0;border-radius:10px;padding:9px 
 .q.lv1{border-top:6px solid #1f7a4d}.q.lv2{border-top:6px solid #b8710b}.q.lv3{border-top:6px solid #b01e4a}
 .lvl{font-size:12px;font-weight:800;margin-bottom:4px}
 #tp{border-color:var(--rd);color:var(--rd)}#tp.on{background:var(--rd);color:#fff;border-color:var(--rd)}
-.pp{border-top:1px solid var(--bd);padding:8px 0}.pp>div:first-child{white-space:pre-wrap}.ms{background:var(--ac2);border-radius:8px;padding:8px 8px 8px 26px;margin:6px 0}.lv1 .lvl{color:#1f7a4d}.lv2 .lvl{color:#b8710b}.lv3 .lvl{color:#b01e4a}
+.pp{border-top:1px solid var(--bd);padding:8px 0}.pp>div:first-child{white-space:pre-wrap}.ms{background:var(--ac2);border-radius:8px;padding:8px 8px 8px 26px;margin:6px 0}
+.ms2{background:var(--ac2);border-radius:8px;padding:8px;margin:6px 0;white-space:pre-wrap}
+.dd{position:relative}.dd summary{cursor:pointer;border:2px solid var(--ac);color:var(--ac);border-radius:10px;padding:6px 12px;font-weight:700;list-style:none;background:var(--card)}
+.ddp{position:absolute;z-index:30;top:110%;left:0;min-width:260px;max-height:60vh;overflow:auto;background:var(--card);border:2px solid var(--ac);border-radius:10px;padding:8px;display:grid;gap:4px}.ddp label{display:flex;gap:6px;align-items:center}
+.lvs label{font-weight:700;margin-right:6px}.d1{color:#1f7a4d}.d2{color:#b8710b}.d3{color:#b01e4a}
+button.pr{background:#c4410c;color:#fff;border:0;border-radius:10px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer}
+#tmb{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:40;border:3px solid var(--pu);color:var(--pu);background:var(--card);border-radius:99px;padding:12px 20px;font:inherit;font-weight:800;cursor:pointer}
+#tmr{position:fixed;left:14px;bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--card);border:2px solid var(--pu);border-radius:14px;padding:12px;width:290px;display:none}#tmr.on{display:block}
+#tmd{font-size:44px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums}#tmd.end{color:var(--rd)}
+#tmr.big{inset:0;width:auto;border-radius:0;display:flex;flex-direction:column;justify-content:center;align-items:center}#tmr.big #tmd{font-size:20vw}
+@media print{header,.topbar,.ctl,.acts,#tmb,#tmr,#modal{display:none!important}body{background:#fff;color:#000}.q{break-inside:avoid}}.lv1 .lvl{color:#1f7a4d}.lv2 .lvl{color:#b8710b}.lv3 .lvl{color:#b01e4a}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
 #modal.on{display:flex}
@@ -67,9 +77,14 @@ button.hc{background:#3d4a5c;color:#fff;border:0;border-radius:10px;padding:9px 
 <div class="tabs"><button id="tq" onclick="tab('q')">Questions</button><button id="tp" onclick="tab('p')">Practice</button><button id="ts" onclick="tab('s')">Setup</button></div></header>
 <main id="app"></main>
 <div id="modal" onclick="if(event.target===this)closeM()"><div id="mb"></div></div>
+<button id="tmb" onclick="$('tmr').classList.toggle('on')">⏱ Timer</button>
+<div id="tmr"><div id="tmd">05:00</div>
+<div class="acts" style="justify-content:center"><button class="g" onclick="tm.base=60;tm.reset()">1 min</button><button class="g" onclick="tm.base=120;tm.reset()">2 min</button><button class="g" onclick="tm.base=180;tm.reset()">3 min</button><button class="g" onclick="tm.base=300;tm.reset()">5 min</button><button class="g" onclick="tm.base=600;tm.reset()">10 min</button><button class="g" onclick="tm.base=900;tm.reset()">15 min</button></div>
+<div class="acts" style="justify-content:center"><button class="g" onclick="tm.add(-60)">−1 min</button><button class="g" onclick="tm.add(60)">+1 min</button></div>
+<div class="acts" style="justify-content:center"><button class="b" id="tgo" onclick="tm.go()">Start</button><button class="g" onclick="tm.reset()">Reset</button><button class="g" onclick="$('tmr').classList.toggle('big')">Big screen</button><button class="g" onclick="$('tmr').classList.remove('on','big')">Close</button></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-const S={files:[],topics:[],over:{},tab:'s',tsel:new Set(),pf:'all',busy:'',note:'',showCtx:true,lv:[1,2,3],q:'',hide:false};
+const S={files:[],topics:[],over:{},tab:'s',tsel:new Set(),pf:'all',busy:'',note:'',showCtx:true,lv:[1,2,3],q:'',hide:false,n:10,seed:0,ddo:''};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=id=>document.getElementById(id);
 try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}catch(e){}
@@ -321,7 +336,7 @@ function setupV(){
   <details style="margin-top:12px"><summary>Or paste a topic list</summary><p class="mu">One per line, optionally “Topic name: keyword, keyword”.</p><textarea id="paste" rows="5" style="width:100%"></textarea><div class="acts"><button class="g" onclick="pasteT()">Replace topics</button></div></details></div>
   <div class="panel"><h2>4. Publish for students</h2><p class="mu">Once you’re happy with the topics and questions, export them as a file called <b>bank.json</b>. Upload that to your GitHub site (and the original PDFs into a folder called <b>papers</b>) and students will see a read-only version of this page. Export only works when you open your site with <b>#teacher</b> on the end of the web address.</p><div class="acts"><button class="b" onclick="exportBank()">Export bank.json</button></div></div>`;
 }
-const LV={1:'Level 1: Secure',2:'Level 2: Developing',3:'Level 3: Challenge'};
+const LV={1:'Pass',2:'Merit',3:'Distinction'};
 S.pt=new Set();S.ps=new Set();S.pa=false;
 const PQ=[
 {t:'Components of fitness',s:'Dev is a 16-year-old goalkeeper in a youth football team.',p:[
@@ -364,12 +379,85 @@ const PQ=[
 ['(a)','State two long-term effects of continuous training on the cardiovascular system.',2,'Cardiac hypertrophy (1) | Decrease in resting heart rate (1) | Increased stroke volume / cardiac output (1) | Capillarisation (1) | Max 2'],
 ['(b)','Explain how a lower resting heart rate could benefit Raj.',2,'The heart is stronger / pumps more blood per beat (1) | so more oxygen reaches the muscles / he can work harder for longer (1)']]},
 {t:'Training methods',s:'Ben is a 17-year-old hockey player. His test results are: sit and reach 11 cm (below average); vertical jump 52 cm (above average); multi-stage fitness test level 5 shuttle 3 (below average).',p:[
-['(a)','Using the test results, assess the training methods Ben could use to improve his weakest components of fitness for hockey.',6,'Indicative content (not prescriptive) | Flexibility is weak: static stretching or PNF; PNF uses a partner or force to increase range of movement; helps reach and low stick positions | Aerobic endurance is weak: continuous, Fartlek or interval training; interval or Fartlek suits the stop-start nature of hockey; progress by increasing time or intensity | Power is a strength so keep maintenance work only | Level 1 (1–2): isolated points | Level 2 (3–4): some accurate points linked to the results | Level 3 (5–6): accurate, detailed, linked to the results and hockey with a supported judgement']]}
+['(a)','Using the test results, assess the training methods Ben could use to improve his weakest components of fitness for hockey.',6,'Indicative content (not prescriptive) | Flexibility is weak: static stretching or PNF; PNF uses a partner or force to increase range of movement; helps reach and low stick positions | Aerobic endurance is weak: continuous, Fartlek or interval training; interval or Fartlek suits the stop-start nature of hockey; progress by increasing time or intensity | Power is a strength so keep maintenance work only | Level 1 (1–2): isolated points | Level 2 (3–4): some accurate points linked to the results | Level 3 (5–6): accurate, detailed, linked to the results and hockey with a supported judgement']]},
+{t:'Fitness testing',s:'Priya is a gymnast and wants to know how flexible she is.',p:[
+['(a)','Name one fitness test that measures flexibility.',1,'Sit and reach test (1) | Accept shoulder flexibility test / calf muscle flexibility test'],
+['(b)','Describe how the sit and reach test is carried out.',3,'Sits with legs straight and feet flat against the box (1) | Reaches forwards as far as possible along the ruler without bending the knees (1) | Holds the position briefly / best of three attempts and the distance is recorded in cm (1)'],
+['(c)','Explain one way to make sure the test is valid.',2,'Follow the protocol exactly / keep the knees straight (1) | so it measures flexibility and not something else (1)']]},
+{t:'Components of fitness',s:'Marcus is a 100 m sprinter and Eve is a marathon runner.',p:[
+['(a)','Name the main component of fitness needed by a marathon runner.',1,'Aerobic endurance (1)'],
+['(b)','Explain why speed is important for a 100 m sprinter.',2,'Speed is the rate at which someone can move / cover a distance (1) | so he can cover 100 m in the shortest time / finish before opponents (1)'],
+['(c)','Name one fitness test for speed and one fitness test for aerobic endurance.',2,'Speed: 30 m sprint test (1) | Aerobic endurance: multi-stage fitness test / 12-minute Cooper run / Harvard step test (1)']]},
+{t:'Training methods',s:'Hana plays badminton. Her coach wants to improve her agility and balance.',p:[
+['(a)','Describe one training method that would improve Hana’s agility.',2,'SAQ / cone drills / ladder drills (1) | Quick changes of direction around markers, getting faster as agility improves (1) | Accept any other appropriate answer'],
+['(b)','Name one training method to improve balance.',1,'Wobble board / balance board (1) | Accept Bosu ball / single-leg stands / yoga'],
+['(c)','Explain why balance is important in badminton.',2,'Balance is keeping the centre of mass over a base of support (1) | so she can stay stable when lunging for a shot and recover quickly (1)']]},
+{t:'Training methods',s:'Zane plays rugby and wants to increase his muscular strength using weight training.',p:[
+['(a)','Name two types of weight training equipment.',2,'Free weights (1) | Fixed resistance machines (1)'],
+['(b)','Describe how Zane should set up his weights session to improve strength.',2,'High loads / heavy weights (1) | Low number of repetitions (1)'],
+['(c)','Explain one advantage of fixed resistance machines compared with free weights.',2,'No spotter needed / safer for beginners (1) | because the machine supports the weight and guides the movement (1)']]},
+{t:'Principles of training',s:'Ella is a swimmer who trains six days a week. Her coach says she needs rest days and more variety in her sessions.',p:[
+['(a)','Name the additional principle of training that means giving the body time to repair after training.',1,'Rest and recovery (1)'],
+['(b)','Explain one reason why Ella’s coach should vary her sessions.',2,'To avoid boredom / keep her motivated (1) | so she keeps attending and trains harder / avoids overusing the same muscles (1)'],
+['(c)','Explain what is meant by specificity.',2,'Training should match the demands of the sport or activity (1) | e.g. swimmers should use swimming-based training to improve the muscles and energy systems they use (1)']]},
+{t:'Planning and goal setting',s:'Before starting a gym programme, Omar completes a Physical Activity Readiness Questionnaire (PAR-Q).',p:[
+['(a)','State what a PAR-Q is used for.',1,'To check it is safe for someone to start exercising / identify health risks (1)'],
+['(b)','Explain why Omar’s trainer needs to know about any previous injuries.',2,'So the programme does not make the injury worse / avoids exercises that stress it (1) | to keep him safe / set a suitable intensity (1)'],
+['(c)','Name two ways of monitoring exercise intensity.',2,'Heart rate / heart rate monitor (1) | Borg scale / RPE (1) | Training zones / percentage of 1RM (1) | Max 2']]},
+{t:'Reliability and validity',s:'Jordan’s coach compares his fitness test results with normative data for people of his age.',p:[
+['(a)','Explain what is meant by ‘normative data’.',2,'Results collected from large numbers of people (1) | used to compare an individual’s score with the average for their age / gender (1)'],
+['(b)','Explain why the coach calibrates the equipment before testing.',2,'Calibration checks the equipment is accurate / working properly (1) | so the results are reliable / valid (1)'],
+['(c)','Give one reason why fitness testing is important.',1,'To identify strengths and weaknesses (1) | To set goals / plan training (1) | To show improvement over time (1) | Max 1']]},
+{t:'Long-term effects of training',s:'Kira has completed an eight-week strength training programme.',p:[
+['(a)','State two long-term effects of strength training on the muscular system.',2,'Muscle hypertrophy (1) | Increase in muscle strength (1) | Increased tendon and ligament strength (1) | Max 2'],
+['(b)','State one long-term effect of strength training on the skeletal system.',1,'Increased bone density (1)'],
+['(c)','Explain why increased bone density benefits Kira.',2,'Bones are stronger / less likely to fracture (1) | so she can lift heavier loads / has a lower risk of injury (1)']]}
 ];
-const PT=[...new Set(PQ.map(q=>q.t))];
+const PT=[...new Set([...PQ.map(q=>q.t),'Calculations'])];
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function gen(){
+  const nm=['Aisha','Ben','Chloe','Dan','Elif','Femi','Gabe','Hana','Ivan','Jess'],pk=()=>nm[R(0,nm.length-1)];
+  const a=R(14,60),n1=pk(),b=R(15,55),n2=pk(),pc=[60,65,70,75,80,85][R(0,5)],w=R(48,95),h=R(150,195)/100,n3=pk(),rm=R(8,20)*5,n4=pk(),pp=[60,70,75,80,85][R(0,4)];
+  return[
+  {t:'Calculations',s:`${n1} is ${a} years old and is starting a new training programme.`,p:[['(a)',`Calculate ${n1}’s maximum heart rate.`,1,`220 – ${a} = ${220-a} bpm (1)`]]},
+  {t:'Calculations',s:`${n2} is ${b} years old. Her coach wants her to train at ${pc}% of her maximum heart rate.`,p:[['(a)','Calculate her maximum heart rate.',1,`220 – ${b} = ${220-b} bpm (1)`],['(b)','Calculate the heart rate she should work at.',2,`${220-b} × ${pc} ÷ 100 = ${Math.round((220-b)*pc/100)} bpm (1 for method, 1 for answer) | Accept answers within 1 bpm`]]},
+  {t:'Calculations',s:`${n3} weighs ${w} kg and is ${h.toFixed(2)} m tall.`,p:[['(a)','State the formula for body mass index (BMI).',1,'Weight (kg) ÷ height (m) squared / kg/m² (1)'],['(b)',`Calculate ${n3}’s BMI. Give your answer to 1 decimal place.`,2,`${w} ÷ (${h.toFixed(2)} × ${h.toFixed(2)}) = ${(w/(h*h)).toFixed(1)} kg/m² (1 for method, 1 for answer)`]]},
+  {t:'Calculations',s:`${n4} has a one-repetition maximum (1RM) of ${rm} kg on the bench press.`,p:[['(a)',`Calculate the weight ${n4} should lift to train at ${pp}% of 1RM.`,2,`${rm} × ${pp} ÷ 100 = ${+(rm*pp/100).toFixed(2)} kg (1 for method, 1 for answer)`]]}];
+}
+S.gen=gen();
+const hs=s=>{let x=0;for(const c of String(s))x=(x*31+c.charCodeAt(0))|0;return x};
+const pick=(a,k)=>{const b=S.seed?[...a].sort((x,y)=>hs(k(x)+S.seed)-hs(k(y)+S.seed)):a;return S.n?b.slice(0,S.n):b};
+function diff(text,m){
+  const ln=text.split('\n'),i=ln.findIndex(l=>/^(\d{1,2}\s*\([a-z]|\([a-z]\)\s|\d{1,2}\s+[A-Z])/.test(l)),s=(i>0?ln.slice(i):ln).join(' ').toLowerCase();
+  const w=s.match(/\b(assess|evaluate|justify|discuss|compare|analyse|explain|describe|outline|complete|calculate|suggest|state|name|give|identify|which|what)\b/);
+  let c=w?({assess:3,evaluate:3,justify:3,discuss:3,compare:3,analyse:3,explain:2,describe:2,outline:2,complete:2,calculate:2,suggest:2}[w[1]]||1):1;
+  if(c===2&&m<=1)c=1;if(c===3&&m<5)c=2;
+  return Math.max(c,m>=5?3:m>=3?2:1);
+}
+const dd=(label,items,sel,fn,clr)=>`<details class="dd" ${S.ddo===label?'open':''} ontoggle="if(this.open)S.ddo='${label}';else if(S.ddo==='${label}')S.ddo=''"><summary>${label}: ${sel.size?sel.size+' selected':'all'} ▾</summary><div class="ddp">${items.map(([id,name,c])=>`<label><input type="checkbox" ${sel.has(id)?'checked':''} onchange="${fn}(${typeof id==='number'?id:"'"+id+"'"})"> ${esc(name)} <span class="mu">${c}</span></label>`).join('')}${sel.size?`<button class="g" onclick="${clr}">Clear</button>`:''}</div></details>`;
+const bar=(d,extra)=>`<div class="ctl"><div class="crow"><b class="cl">1. Choose topics</b>${d}${extra||''}<label>Questions <select onchange="S.n=+this.value;render()">${[5,10,15,20,0].map(n=>`<option value="${n}" ${S.n===n?'selected':''}>${n||'All'}</option>`).join('')}</select></label></div>
+<div class="crow"><b class="cl">2. Make</b><span class="lvs">${[1,2,3].map(n=>`<label class="d${n}"><input type="checkbox" ${S.lv.includes(n)?'checked':''} onchange="lvT(${n})"> ${LV[n]}</label>`).join('')}</span><button class="b" onclick="S.seed=Math.random();if(S.tab==='p')S.gen=gen();render()">New questions</button><button class="b" onclick="S.pa=!S.pa;render()">${S.pa?'Hide answers':'Show answers'}</button><button class="pr" onclick="prn(false)">Worksheet PDF</button><button class="pr" onclick="prn(true)">Answers PDF</button><label><input type="checkbox" ${S.showCtx?'checked':''} onchange="S.showCtx=this.checked;render()"> Show scenarios</label></div></div>`;
+function prn(a){const w=S.pa;S.pa=a;render();setTimeout(()=>{window.print();S.pa=w;render()},150)}
+const tm={t:300,base:300,run:false,iv:null,
+  set(s){this.t=Math.max(0,s);this.show()},add(s){this.set(this.t+s)},
+  show(){const m=Math.floor(this.t/60),s=this.t%60;$('tmd').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')},
+  go(){if(this.run){this.pause();return}if(this.t<=0)return;this.run=true;$('tgo').textContent='Pause';this.iv=setInterval(()=>{this.t--;this.show();if(this.t<=0){this.pause();this.beep();$('tmd').classList.add('end')}},1000)},
+  pause(){this.run=false;clearInterval(this.iv);$('tgo').textContent='Start'},
+  reset(){this.pause();this.set(this.base);$('tmd').classList.remove('end')},
+  beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator();o.connect(c.destination);o.frequency.value=880;o.start();setTimeout(()=>{o.stop();c.close()},900)}catch(e){}}};
+tm.show();
 function ptg(i){const t=PT[i];S.pt.has(t)?S.pt.delete(t):S.pt.add(t);render()}
 function psh(id){S.ps.has(id)?S.ps.delete(id):S.ps.add(id);render()}
 function pV(){
+  const pool=[...PQ,...S.gen].map((q,i)=>({...q,i,tot:q.p.reduce((a,x)=>a+x[2],0),lv:Math.max(...q.p.map(x=>diff(x[1],x[2])))}));
+  const cn={};pool.forEach(q=>cn[q.t]=(cn[q.t]||0)+1);
+  const f=pool.filter(q=>(!S.pt.size||S.pt.has(q.t))&&S.lv.includes(q.lv)),sh=pick(f,q=>q.t+q.i);
+  const card=q=>`<div class="q lv${q.lv}"><div class="lvl">${LV[q.lv]} · ${q.tot} marks</div><div class="qh"><span class="chip">${esc(q.t)}</span></div><div class="cx"><div class="mu"><b>Scenario</b></div>${esc(q.s)}</div>${q.p.map(x=>{const id=q.i+x[0],o=S.pa||S.ps.has(id);return `<div class="pp"><div><b>${x[0]}</b> ${esc(x[1])} <span class="mu">(${x[2]})</span></div><div class="acts"><button class="g" onclick="psh('${id}')">${o?'Hide':'Show'} mark scheme</button></div>${o?`<ul class="ms">${x[3].split('|').map(m=>`<li>${esc(m.trim())}</li>`).join('')}</ul>`:''}</div>`}).join('')}</div>`;
+  const sel=new Set([...S.pt].map(t=>PT.indexOf(t)));
+  return `<div class="topbar"><span class="mu">Original practice questions in the style of the exam – not from Pearson. Teachers: please check before use. “New questions” also makes fresh calculation questions.</span></div>${bar(dd('Topics',PT.map((t,i)=>[i,t,cn[t]||0]),sel,'ptg',"S.pt.clear();render()"))}
+  <div class="ban">Practice questions – ${S.pt.size?[...S.pt].join(', '):'All topics'} · showing ${sh.length} of ${f.length}</div>${sh.map(card).join('')}`;
+}
+function pVold(){
   const cl=PQ.map((q,i)=>{const tot=q.p.reduce((a,x)=>a+x[2],0);return{...q,i,tot,lv:tot<=5?1:tot<=9?2:3}});
   const cn={};cl.forEach(q=>cn[q.t]=(cn[q.t]||0)+1);
   const sh=cl.filter(q=>(!S.pt.size||S.pt.has(q.t))&&S.lv.includes(q.lv));
@@ -382,6 +470,28 @@ function pV(){
 const lvOf=q=>(q.marks||1)<=2?1:(q.marks<=4?2:3);
 function lvT(n){S.lv=S.lv.includes(n)?S.lv.filter(x=>x!==n):[...S.lv,n];render()}
 function qV(){
+  const qs=allQ();
+  if(!qs.length)return '<div class="panel"><p>No questions yet. Go to <b>Setup</b> and upload an exam paper.</p></div>';
+  const cl=qs.map(q=>({...q,tp:classify(q),lv:diff(q.text,q.marks||1)}));
+  const cnt={};cl.forEach(q=>q.tp.forEach(t=>cnt[t]=(cnt[t]||0)+1));
+  const ids=[...S.topics.map(t=>t.id),'none'].filter(id=>cnt[id]);
+  const papers=S.files.filter(f=>f.kind==='exam'),kw=(S.q||'').toLowerCase();
+  const pool=cl.filter(q=>(!S.tsel.size||q.tp.some(t=>S.tsel.has(t)))&&(S.pf==='all'||q.fid===S.pf)&&S.lv.includes(q.lv)&&(!kw||(q.text+' '+q.tp.map(tname).join(' ')).toLowerCase().includes(kw)));
+  const shown=pick(pool,q=>q.key);
+  const ps=`<select onchange="S.pf=this.value;render()"><option value="all">All papers</option>${papers.map(p=>`<option value="${p.id}" ${S.pf===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`;
+  const ctl=S.hide?'':bar(dd('Topics',ids.map(id=>[id,tname(id),cnt[id]]),S.tsel,'tg',"S.tsel.clear();render()"),ps);
+  const card=q=>`<div class="q lv${q.lv}"><div class="lvl">${LV[q.lv]} · ${q.marks?q.marks+' mark'+(q.marks>1?'s':''):'marks not found'}</div>
+   <div class="qh"><b>${esc(q.paper)}</b><span class="mu">Question ${q.label||q.n}</span>${q.tp.map(t=>`<span class="chip">${esc(tname(t))}</span>`).join('')}</div>
+   ${S.showCtx?q.ctxs.map(c=>`<div class="cx"><div class="mu"><b>${esc(c.title||'Scenario / context')}</b></div>${c.text?`<div class="qt" onclick="this.classList.toggle('open')">${esc(c.text)}</div>`:''}${c.img?`<img src="${c.img}" alt="${esc(c.title||'figure')}" style="max-width:100%;display:block;margin-top:6px;background:#fff">`:''}</div>`).join(''):''}
+   ${!q.ctxs.length&&REF.test(q.text)?'<p class="wn">⚠ This question refers to a scenario or figure but none was detected – use “View as printed”.</p>':''}
+   <div class="qt" onclick="this.classList.toggle('open')" title="Click to expand">${esc(q.text)}</div>
+   ${S.pa&&q.ms?`<div class="ms2"><b>Mark scheme</b>\n${esc(q.ms)}</div>`:''}
+   <div class="acts"><button class="b" onclick="viewMS('${q.key}')">View mark scheme</button><button class="g" onclick="viewPrint('${q.key}')">View as printed</button><button class="g" onclick="viewPg('${q.fid}',${q.p})">View original page</button>${q.ctxs.length?`<button class="g" onclick="viewPg('${q.fid}',${q.ctxs[0].p})">View scenario page</button>`:''}
+   <select class="mvs" onchange="mv('${q.key}',this.value)"><option value="">Move to topic…</option>${S.topics.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></div></div>`;
+  return `<div class="topbar"><input type="text" class="srch" placeholder="🔍 Search questions or topics… (press Enter)" value="${esc(S.q||'')}" onchange="S.q=this.value;render()"><button class="hc" onclick="S.hide=!S.hide;render()">${S.hide?'Show controls':'Hide controls'}</button></div>${ctl}
+  <div class="ban">Exam questions – ${S.tsel.size?[...S.tsel].map(tname).join(', '):'All topics'} · showing ${shown.length} of ${pool.length}</div>${shown.map(card).join('')}`;
+}
+function qVold2(){
   const qs=allQ();
   if(!qs.length)return '<div class="panel"><p>No questions yet. Go to <b>Setup</b> and upload an exam paper.</p></div>';
   const cl=qs.map(q=>({...q,tp:classify(q),lv:lvOf(q)}));
