@@ -3,7 +3,7 @@
 <title>BTEC Sport Question Bank</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
-:root{--bg:#f5f6f8;--card:#fff;--tx:#1b1f24;--mu:#5d6773;--bd:#d9dee3;--ac:#0b6e4f;--ac2:#e3f3ec;--wn:#a15c00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#fff;--card:#fff;--tx:#1b1f24;--mu:#5d6773;--bd:#d9dee3;--ac:#1f7a4d;--ac2:#e3f3ec;--nv:#1a3a8f;--pu:#6b2fa0;--rd:#b01e4a;--wn:#a15c00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13161a;--card:#1c2126;--tx:#e8eaed;--mu:#9aa4af;--bd:#313a42;--ac:#4fc79b;--ac2:#1b3a2e;--wn:#e0a24a}}
 :root[data-theme="dark"]{--bg:#13161a;--card:#1c2126;--tx:#e8eaed;--mu:#9aa4af;--bd:#313a42;--ac:#4fc79b;--ac2:#1b3a2e;--wn:#e0a24a}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -40,6 +40,21 @@ input[type=text],select,textarea{font:inherit;color:var(--tx);background:var(--b
 .qt{white-space:pre-wrap;max-height:9.5em;overflow:hidden;cursor:pointer;position:relative}
 .qt.open{max-height:none}
 .cx{background:var(--ac2);border-radius:8px;padding:8px 10px;margin-bottom:8px}.cx .qt{max-height:6em}.student .mvs{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--nv:#8fb0ff;--pu:#c39bff;--rd:#ff7a9c}}
+.ttl{background:var(--nv);color:#fff;border:3px solid #0d2466;border-radius:12px;padding:8px 16px;display:inline-block;font-size:17px}
+.tabs{display:flex;gap:10px}.tabs button{border-radius:12px!important;border-width:2px;font-weight:700;background:var(--card)}
+#tq{border-color:var(--ac);color:var(--ac)}#tq.on{background:var(--ac);color:#fff}
+#ts{border-color:var(--pu);color:var(--pu)}#ts.on{background:var(--pu);color:#fff;border-color:var(--pu)}
+.topbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.srch{flex:1;min-width:180px;border-radius:99px;padding:9px 14px}
+button.hc{background:#3d4a5c;color:#fff;border:0;border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;cursor:pointer}
+.ctl{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.crow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:4px 0}.cl{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--mu);min-width:120px}
+.tc{border:2px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:6px 12px;font:inherit;cursor:pointer}.tc.on{border-color:var(--ac);background:var(--ac);color:#fff}.tc span{opacity:.7}
+.ban{border:3px solid var(--nv);background:color-mix(in srgb,var(--nv) 10%,var(--card));color:var(--nv);border-radius:12px;padding:12px;text-align:center;font-weight:800;font-size:18px;margin:12px 0}
+.q.lv1{border-top:6px solid #1f7a4d}.q.lv2{border-top:6px solid #b8710b}.q.lv3{border-top:6px solid #b01e4a}
+.lvl{font-size:12px;font-weight:800;margin-bottom:4px}
+#tp{border-color:var(--rd);color:var(--rd)}#tp.on{background:var(--rd);color:#fff;border-color:var(--rd)}
+.pp{border-top:1px solid var(--bd);padding:8px 0}.pp>div:first-child{white-space:pre-wrap}.ms{background:var(--ac2);border-radius:8px;padding:8px 8px 8px 26px;margin:6px 0}.lv1 .lvl{color:#1f7a4d}.lv2 .lvl{color:#b8710b}.lv3 .lvl{color:#b01e4a}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
 #modal.on{display:flex}
@@ -48,13 +63,13 @@ input[type=text],select,textarea{font:inherit;color:var(--tx);background:var(--b
 #mb canvas{display:block;max-width:100%;height:auto;border:1px solid var(--bd)}
 </style></head>
 <body>
-<header><h1>⚽ BTEC Tech Award Sport – Question Bank</h1>
-<div class="tabs"><button id="tq" onclick="tab('q')">Questions</button><button id="ts" onclick="tab('s')">Setup</button></div></header>
+<header><h1><span class="ttl">⚽ BTEC Tech Award Sport – Question Bank</span></h1>
+<div class="tabs"><button id="tq" onclick="tab('q')">Questions</button><button id="tp" onclick="tab('p')">Practice</button><button id="ts" onclick="tab('s')">Setup</button></div></header>
 <main id="app"></main>
 <div id="modal" onclick="if(event.target===this)closeM()"><div id="mb"></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-const S={files:[],topics:[],over:{},tab:'s',tsel:new Set(),pf:'all',busy:'',note:'',showCtx:true};
+const S={files:[],topics:[],over:{},tab:'s',tsel:new Set(),pf:'all',busy:'',note:'',showCtx:true,lv:[1,2,3],q:'',hide:false};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=id=>document.getElementById(id);
 try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}catch(e){}
@@ -278,9 +293,9 @@ async function viewPg(fid,p){
 /* ---------- views ---------- */
 function tab(t){S.tab=t;render()}
 function tg(id){S.tsel.has(id)?S.tsel.delete(id):S.tsel.add(id);render()}
-function render(){document.querySelector('.tabs').style.display=S.student?'none':'';
-  $('tq').className=S.tab==='q'?'on':'';$('ts').className=S.tab==='s'?'on':'';
-  $('app').innerHTML=S.tab==='s'?setupV():qV();
+function render(){$('ts').style.display=S.student?'none':'';
+  $('tq').className=S.tab==='q'?'on':'';$('ts').className=S.tab==='s'?'on':'';$('tp').className=S.tab==='p'?'on':'';
+  $('app').innerHTML=S.tab==='s'?setupV():S.tab==='p'?pV():qV();
 }
 function setupV(){
   const ex=S.files.filter(f=>f.kind==='exam'),ms=S.files.filter(f=>f.kind==='ms');
@@ -306,7 +321,87 @@ function setupV(){
   <details style="margin-top:12px"><summary>Or paste a topic list</summary><p class="mu">One per line, optionally “Topic name: keyword, keyword”.</p><textarea id="paste" rows="5" style="width:100%"></textarea><div class="acts"><button class="g" onclick="pasteT()">Replace topics</button></div></details></div>
   <div class="panel"><h2>4. Publish for students</h2><p class="mu">Once you’re happy with the topics and questions, export them as a file called <b>bank.json</b>. Upload that to your GitHub site (and the original PDFs into a folder called <b>papers</b>) and students will see a read-only version of this page. Export only works when you open your site with <b>#teacher</b> on the end of the web address.</p><div class="acts"><button class="b" onclick="exportBank()">Export bank.json</button></div></div>`;
 }
+const LV={1:'Level 1: Secure',2:'Level 2: Developing',3:'Level 3: Challenge'};
+S.pt=new Set();S.ps=new Set();S.pa=false;
+const PQ=[
+{t:'Components of fitness',s:'Dev is a 16-year-old goalkeeper in a youth football team.',p:[
+['(a)','Which one of the following is the correct definition of reaction time?\nA  The time taken to respond to a stimulus\nB  The time taken to sprint 30 metres\nC  The ability to change direction quickly\nD  The ability to stay balanced',1,'A – the time taken to respond to a stimulus (1)'],
+['(b)','Name one fitness test that measures reaction time.',1,'Ruler drop test (1) | Online reaction time test (1) | Accept any other appropriate answer'],
+['(c)','Explain why good reaction time is important for a goalkeeper.',2,'Reaction time is how quickly you respond to a stimulus (1) | so he can respond quickly to a shot or cross / get to the ball before the attacker (1) | Accept any other appropriate answer']]},
+{t:'Fitness testing',s:'Amara plays netball. Her coach tests her aerobic endurance using the multi-stage fitness test.',p:[
+['(a)','Describe how the multi-stage fitness test is carried out.',3,'Award 1 mark for each point, up to a maximum of 3 | Markers set up 20 m apart (1) | Participant runs between the markers in time with the bleeps (1) | Bleeps get faster / levels get harder (1) | Stops when they cannot keep up with the bleeps (1) | Level and shuttle reached are recorded (1)'],
+['(b)','State one pre-test procedure the coach should complete before the test.',1,'PAR-Q / informed consent (1) | Check equipment / calibrate / check the bleep recording (1) | Check the running surface (1) | Accept any other appropriate answer'],
+['(c)','Give one advantage and one disadvantage of the multi-stage fitness test.',2,'Advantage (1): many people can be tested at once / cheap / easy to set up / normative data available | Disadvantage (1): relies on motivation to continue / needs a large space / maximal test so not suitable for some people | Accept any other appropriate answer']]},
+{t:'Reliability and validity',s:'A school PE department tests Year 10 students using the one-minute sit-up test.',p:[
+['(a)','Which one of the following is the correct definition of reliability?\nA  The test measures what it says it measures\nB  The test gives consistent results when repeated\nC  The test is cheap to carry out\nD  The test is quick to carry out',1,'B – the test gives consistent results when repeated (1)'],
+['(b)','Explain why it is important that the test is valid.',2,'A valid test measures what it is meant to measure / muscular endurance (1) | so the results can be trusted / the correct training can be planned from them (1) | Accept any other appropriate answer'],
+['(c)','Explain one way the department could make sure the results are reliable.',2,'Use the same protocol / same sit-up technique each time (1) | so any change in results is due to fitness, not the way the test was done (1) | Same equipment / same tester / same conditions (1) | Accept any other appropriate answer']]},
+{t:'Training methods',s:'Callum is a 1500 m runner. His coach is planning his training for the next season.',p:[
+['(a)','Assess how interval training and Fartlek training could be used to improve Callum\u2019s performance in the 1500 m.',6,'Indicative content (not prescriptive) | Interval training: periods of work with rest/recovery; can be at race pace; improves aerobic and anaerobic fitness; rest can be reduced to progress; work and rest are easy to measure; hard sessions need recovery | Fartlek: continuous running with changes of speed/terrain; matches the changes of pace in a race; varied so less boring; harder to control or measure the intensity | Judgement: e.g. interval training is likely more useful close to races, Fartlek for variety | Level 1 (1–2): isolated points, few links to 1500 m | Level 2 (3–4): some accurate points with some links | Level 3 (5–6): accurate, detailed, linked to the 1500 m with a supported judgement']]},
+{t:'Training methods',s:'Lena is a javelin thrower who wants to throw further.',p:[
+['(a)','Name one training method that would improve Lena\u2019s power.',1,'Plyometrics (1) | Accept examples such as box jumps / bounding / depth jumps'],
+['(b)','Describe plyometric training.',2,'Explosive jumping or bounding exercises (1) | Muscle is stretched then rapidly shortened / quick, powerful movements e.g. depth jumps (1)'],
+['(c)','Explain why power is important in javelin throwing.',2,'Power is strength and speed combined / force produced quickly (1) | so she can throw the javelin faster and further (1)']]},
+{t:'Principles of training',s:'Josh plays rugby and trains three times a week. After four weeks his coach increases the weights he lifts.',p:[
+['(a)','Name the principle of training Josh\u2019s coach is applying.',1,'Progressive overload (1)'],
+['(b)','Explain why this principle is needed.',2,'The body adapts to training so improvements slow or stop (1) | gradually increasing the demands keeps challenging the body so fitness keeps improving (1)'],
+['(c)','Josh is injured and cannot train for six weeks. Name the principle of training that explains why he may lose fitness.',1,'Reversibility (1)']]},
+{t:'Principles of training',s:'Mei is training for a 10 km run. Her programme is two 30-minute steady runs each week at 65% of her maximum heart rate.',p:[
+['(a)','State what the \u2018T\u2019 in FITT can stand for.',2,'Time (1) | Type (1)'],
+['(b)','Explain how Mei\u2019s coach could use frequency and intensity to adapt her programme after four weeks.',4,'Frequency (max 2): increase the number of sessions per week, e.g. from 2 to 3 (1) | so the body gets more training stimulus / more adaptation (1) | Intensity (max 2): increase the percentage of maximum heart rate, e.g. from 65% to 75% (1) | so the heart and muscles work harder, giving more adaptation (1)']]},
+{t:'Planning and goal setting',s:'Tom wants to run his first 5 km race in under 30 minutes in 12 weeks.',p:[
+['(a)','Describe the difference between an aim and an objective.',2,'Aim: what he wants to achieve / long-term goal (1) | Objective: how he will meet the aim / the steps to take / short-term goal (1)'],
+['(b)','Tom\u2019s goal includes the words \u2018under 30 minutes\u2019. Name the SMARTER principle this meets.',1,'Measurable (1)'],
+['(c)','Name two pieces of personal information Tom\u2019s coach should collect before planning his programme.',2,'Lifestyle (sleep, diet, smoking, alcohol) (1) | Exercise history (1) | Medical history / injuries (1) | Motivation / aims (1) | Max 2']]},
+{t:'Warm-up and cool-down',s:'Before netball training, the players complete a warm-up and, afterwards, a cool-down.',p:[
+['(a)','Describe a pulse raiser and explain why it is used in a warm-up.',2,'Gradually raises heart rate, e.g. light jogging (1) | increases blood flow and muscle temperature / reduces the risk of injury (1)'],
+['(b)','Explain one benefit of a cool-down.',2,'Gradually lowers heart rate and breathing rate to resting levels (1) | prevents blood pooling / dizziness / fainting (1) | Accept any other appropriate answer']]},
+{t:'Motivation',s:'Sofia is a swimmer. Recently she has lost motivation to attend training.',p:[
+['(a)','Sofia enters competitions to win medals. Name the type of motivation this is.',1,'Extrinsic (1)'],
+['(b)','Describe intrinsic motivation.',1,'Motivation from within / doing something for enjoyment or personal satisfaction (1)'],
+['(c)','Explain two ways Sofia\u2019s coach could increase her motivation.',4,'Set targets / goals (1) so she has something to aim for / sense of achievement (1) | Use rewards or praise (1) which makes her want to keep training (1) | Vary the training sessions (1) to avoid boredom (1) | Accept any other appropriate answer']]},
+{t:'Long-term effects of training',s:'Raj has followed a continuous training programme for 12 weeks.',p:[
+['(a)','State two long-term effects of continuous training on the cardiovascular system.',2,'Cardiac hypertrophy (1) | Decrease in resting heart rate (1) | Increased stroke volume / cardiac output (1) | Capillarisation (1) | Max 2'],
+['(b)','Explain how a lower resting heart rate could benefit Raj.',2,'The heart is stronger / pumps more blood per beat (1) | so more oxygen reaches the muscles / he can work harder for longer (1)']]},
+{t:'Training methods',s:'Ben is a 17-year-old hockey player. His test results are: sit and reach 11 cm (below average); vertical jump 52 cm (above average); multi-stage fitness test level 5 shuttle 3 (below average).',p:[
+['(a)','Using the test results, assess the training methods Ben could use to improve his weakest components of fitness for hockey.',6,'Indicative content (not prescriptive) | Flexibility is weak: static stretching or PNF; PNF uses a partner or force to increase range of movement; helps reach and low stick positions | Aerobic endurance is weak: continuous, Fartlek or interval training; interval or Fartlek suits the stop-start nature of hockey; progress by increasing time or intensity | Power is a strength so keep maintenance work only | Level 1 (1–2): isolated points | Level 2 (3–4): some accurate points linked to the results | Level 3 (5–6): accurate, detailed, linked to the results and hockey with a supported judgement']]}
+];
+const PT=[...new Set(PQ.map(q=>q.t))];
+function ptg(i){const t=PT[i];S.pt.has(t)?S.pt.delete(t):S.pt.add(t);render()}
+function psh(id){S.ps.has(id)?S.ps.delete(id):S.ps.add(id);render()}
+function pV(){
+  const cl=PQ.map((q,i)=>{const tot=q.p.reduce((a,x)=>a+x[2],0);return{...q,i,tot,lv:tot<=5?1:tot<=9?2:3}});
+  const cn={};cl.forEach(q=>cn[q.t]=(cn[q.t]||0)+1);
+  const sh=cl.filter(q=>(!S.pt.size||S.pt.has(q.t))&&S.lv.includes(q.lv));
+  const card=q=>`<div class="q lv${q.lv}"><div class="lvl">${LV[q.lv]} · ${q.tot} marks</div><div class="qh"><span class="chip">${esc(q.t)}</span></div><div class="cx"><div class="mu"><b>Scenario</b></div>${esc(q.s)}</div>${q.p.map(x=>{const id=q.i+x[0],o=S.pa||S.ps.has(id);return `<div class="pp"><div><b>${x[0]}</b> ${esc(x[1])} <span class="mu">(${x[2]})</span></div><div class="acts"><button class="g" onclick="psh('${id}')">${o?'Hide':'Show'} mark scheme</button></div>${o?`<ul class="ms">${x[3].split('|').map(m=>`<li>${esc(m.trim())}</li>`).join('')}</ul>`:''}</div>`}).join('')}</div>`;
+  return `<div class="topbar"><button class="hc" onclick="S.pa=!S.pa;render()">${S.pa?'Hide all mark schemes':'Show all mark schemes'}</button><span class="mu">Original practice questions in the style of the exam – not from Pearson. Teachers: please check before use.</span></div>
+  <div class="ctl"><div class="crow"><b class="cl">1. Choose topics</b>${PT.map((t,i)=>`<button class="tc ${S.pt.has(t)?'on':''}" onclick="ptg(${i})">${esc(t)} <span>${cn[t]}</span></button>`).join('')}${S.pt.size?'<button class="tc" onclick="S.pt.clear();render()">Clear</button>':''}</div>
+  <div class="crow"><b class="cl">2. Show</b><span>Levels ${[1,2,3].map(n=>`<label><input type="checkbox" ${S.lv.includes(n)?'checked':''} onchange="lvT(${n})"> ${n}</label>`).join(' ')}</span></div></div>
+  <div class="ban">Practice questions – ${S.pt.size?[...S.pt].join(', '):'All topics'} · ${sh.length} question${sh.length===1?'':'s'}</div>${sh.map(card).join('')}`;
+}
+const lvOf=q=>(q.marks||1)<=2?1:(q.marks<=4?2:3);
+function lvT(n){S.lv=S.lv.includes(n)?S.lv.filter(x=>x!==n):[...S.lv,n];render()}
 function qV(){
+  const qs=allQ();
+  if(!qs.length)return '<div class="panel"><p>No questions yet. Go to <b>Setup</b> and upload an exam paper.</p></div>';
+  const cl=qs.map(q=>({...q,tp:classify(q),lv:lvOf(q)}));
+  const cnt={};cl.forEach(q=>q.tp.forEach(t=>cnt[t]=(cnt[t]||0)+1));
+  const ids=[...S.topics.map(t=>t.id),'none'].filter(id=>cnt[id]);
+  const papers=S.files.filter(f=>f.kind==='exam'),kw=(S.q||'').toLowerCase();
+  const shown=cl.filter(q=>(!S.tsel.size||q.tp.some(t=>S.tsel.has(t)))&&(S.pf==='all'||q.fid===S.pf)&&S.lv.includes(q.lv)&&(!kw||(q.text+' '+q.tp.map(tname).join(' ')).toLowerCase().includes(kw)));
+  const ctl=S.hide?'':`<div class="ctl"><div class="crow"><b class="cl">1. Choose topics</b>${ids.map(id=>`<button class="tc ${S.tsel.has(id)?'on':''}" onclick="tg('${id}')">${esc(tname(id))} <span>${cnt[id]}</span></button>`).join('')}${S.tsel.size?'<button class="tc" onclick="S.tsel.clear();render()">Clear</button>':''}</div>
+  <div class="crow"><b class="cl">2. Show</b><select onchange="S.pf=this.value;render()"><option value="all">All papers</option>${papers.map(p=>`<option value="${p.id}" ${S.pf===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select><span>Levels ${[1,2,3].map(n=>`<label><input type="checkbox" ${S.lv.includes(n)?'checked':''} onchange="lvT(${n})"> ${n}</label>`).join(' ')}</span><label><input type="checkbox" ${S.showCtx?'checked':''} onchange="S.showCtx=this.checked;render()"> Show scenarios</label></div></div>`;
+  const card=q=>`<div class="q lv${q.lv}"><div class="lvl">${LV[q.lv]} · ${q.marks?q.marks+' mark'+(q.marks>1?'s':''):'marks not found'}</div>
+   <div class="qh"><b>${esc(q.paper)}</b><span class="mu">Question ${q.label||q.n}</span>${q.tp.map(t=>`<span class="chip">${esc(tname(t))}</span>`).join('')}</div>
+   ${S.showCtx?q.ctxs.map(c=>`<div class="cx"><div class="mu"><b>${esc(c.title||'Scenario / context')}</b></div>${c.text?`<div class="qt" onclick="this.classList.toggle('open')">${esc(c.text)}</div>`:''}${c.img?`<img src="${c.img}" alt="${esc(c.title||'figure')}" style="max-width:100%;display:block;margin-top:6px;background:#fff">`:''}</div>`).join(''):''}
+   ${!q.ctxs.length&&REF.test(q.text)?'<p class="wn">⚠ This question refers to a scenario or figure but none was detected – use “View as printed”.</p>':''}
+   <div class="qt" onclick="this.classList.toggle('open')" title="Click to expand">${esc(q.text)}</div>
+   <div class="acts"><button class="b" onclick="viewMS('${q.key}')">View mark scheme</button><button class="g" onclick="viewPrint('${q.key}')">View as printed</button><button class="g" onclick="viewPg('${q.fid}',${q.p})">View original page</button>${q.ctxs.length?`<button class="g" onclick="viewPg('${q.fid}',${q.ctxs[0].p})">View scenario page</button>`:''}
+   <select class="mvs" onchange="mv('${q.key}',this.value)"><option value="">Move to topic…</option>${S.topics.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></div></div>`;
+  return `<div class="topbar"><input type="text" class="srch" placeholder="🔍 Search questions or topics… (press Enter)" value="${esc(S.q||'')}" onchange="S.q=this.value;render()"><button class="hc" onclick="S.hide=!S.hide;render()">${S.hide?'Show controls':'Hide controls'}</button></div>${ctl}
+  <div class="ban">Exam questions – ${S.tsel.size?[...S.tsel].map(tname).join(', '):'All topics'} · ${shown.length} question${shown.length===1?'':'s'}</div>${shown.map(card).join('')}`;
+}
+function qVold(){
   const qs=allQ();
   if(!qs.length)return '<div class="panel"><p>No questions yet. Go to <b>Setup</b> and upload an exam paper.</p></div>';
   const cl=qs.map(q=>({...q,tp:classify(q)}));
